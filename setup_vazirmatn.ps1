@@ -1,4 +1,4 @@
-# Setup Vazirmatn and RTL for Windows
+﻿# Setup Vazirmatn and RTL for Windows
 # Project: Persian Gravity 🚀
 # Dedicated to the memory of Saber Rastikerdar (خالق وزیرمتن)
 
