@@ -53,11 +53,10 @@ else
     echo -e "${RED}❌ خطا در دانلود فونت. اتصال اینترنت را بررسی کنید.${NC}"
 fi
 
-# 2. Patch Antigravity App UI on Linux (Requires Node/npx and permission to edit app.asar if installed in /opt)
+# 2. Patch Antigravity App UI on Linux
 echo ""
 echo -e "${YELLOW}۲. در حال راست‌چین‌سازی ظاهر عمومی برنامه Antigravity...${NC}"
 
-# Common installation paths on Linux
 APP_ASAR_PATHS=(
     "/usr/share/antigravity/resources/app.asar"
     "/opt/Antigravity/resources/app.asar"
@@ -95,7 +94,7 @@ if [ -n "$APP_ASAR" ]; then
                 $SUDO cp "$APP_ASAR" "$APP_ASAR.bak"
                 
                 # Append CSS inject
-                cat << 'EOF' >> /tmp/extracted_app/dist/preload.js
+                cat << 'INNER_EOF' >> "$PRELOAD_PATH"
 
 // RTL & Font Injector - Persian Gravity Project
 window.addEventListener('DOMContentLoaded', () => {
@@ -122,7 +121,7 @@ window.addEventListener('DOMContentLoaded', () => {
     `;
     document.head.appendChild(style);
 });
-EOF
+INNER_EOF
                 $SUDO npx asar pack /tmp/extracted_app "$APP_ASAR"
                 rm -rf /tmp/extracted_app
                 echo -e "${GREEN}✔ ظاهر نرم‌افزار با موفقیت پچ شد.${NC}"
@@ -173,6 +172,44 @@ for p in paths:
         except Exception as e:
             print(f'❌ خطا در بروزرسانی {p}: {e}')
 "
+
+# 4. Setup Auto-Persistence in Linux
+echo ""
+echo -e "${YELLOW}۴. در حال راه‌اندازی سرویس ماندگاری دائمی پس از آپدیت‌ها...${NC}"
+PERSIST_DIR="$HOME/.local/share/antigravity-rtl"
+mkdir -p "$PERSIST_DIR"
+if [ -f "scripts/patch_antigravity_linux.sh" ]; then
+    cp -f "scripts/patch_antigravity_linux.sh" "$PERSIST_DIR/patch_antigravity.sh"
+    chmod +x "$PERSIST_DIR/patch_antigravity.sh"
+fi
+
+mkdir -p "$HOME/.config/systemd/user"
+cat << EOF_SERVICE > "$HOME/.config/systemd/user/antigravity-rtl.service"
+[Unit]
+Description=Antigravity RTL Auto-Patcher
+
+[Service]
+Type=oneshot
+ExecStart=$PERSIST_DIR/patch_antigravity.sh
+EOF_SERVICE
+
+if [ -n "$APP_ASAR" ]; then
+cat << EOF_PATH > "$HOME/.config/systemd/user/antigravity-rtl.path"
+[Unit]
+Description=Watch Antigravity app.asar for updates
+
+[Path]
+PathModified=$APP_ASAR
+Unit=antigravity-rtl.service
+
+[Install]
+WantedBy=paths.target
+EOF_PATH
+
+    systemctl --user daemon-reload &>/dev/null
+    systemctl --user enable --now antigravity-rtl.path &>/dev/null
+    echo -e "${GREEN}✔ سرویس پایش خودکار systemd با موفقیت فعال شد.${NC}"
+fi
 
 echo ""
 echo -e "${GREEN}=============================================${NC}"

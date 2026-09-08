@@ -11,45 +11,45 @@ Write-Host ""
 
 # 1. Download and Install Vazirmatn Font
 Write-Host "۱. در حال دریافت آخرین نسخه فونت وزیرمتن..." -ForegroundColor Yellow
-$LatestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/rastikerdar/vazirmatn/releases/latest"
-$ZipUrl = ($LatestRelease.assets | Where-Object { $_.name -like "*.zip" }).browser_download_url | Select-Object -First 1
+ = Invoke-RestMethod -Uri "https://api.github.com/repos/rastikerdar/vazirmatn/releases/latest"
+ = (.assets | Where-Object { .name -like "*.zip" }).browser_download_url | Select-Object -First 1
 
-if (-not $ZipUrl) {
-    $ZipUrl = "https://github.com/rastikerdar/vazirmatn/releases/download/v33.003/vazirmatn-v33.003.zip"
+if (-not ) {
+     = "https://github.com/rastikerdar/vazirmatn/releases/download/v33.003/vazirmatn-v33.003.zip"
 }
 
-$TempZip = "$env:TEMP\vazirmatn.zip"
-$TempFolder = "$env:TEMP\vazirmatn_extracted"
+ = ":TEMP\vazirmatn.zip"
+ = ":TEMP\vazirmatn_extracted"
 
 Write-Host "در حال دانلود فونت..."
-Invoke-WebRequest -Uri $ZipUrl -OutFile $TempZip
+Invoke-WebRequest -Uri  -OutFile 
 
-if (Test-Path $TempZip) {
+if (Test-Path ) {
     Write-Host "در حال استخراج و نصب فونت..."
-    Expand-Archive -Path $TempZip -DestinationPath $TempFolder -Force
+    Expand-Archive -Path  -DestinationPath  -Force
     
     # Target Fonts Folder for Current User
-    $FontsFolder = "$env:LOCALAPPDATA\Microsoft\Windows\Fonts"
-    if (-not (Test-Path $FontsFolder)) {
-        New-Item -Path $FontsFolder -ItemType Directory | Out-Null
+     = ":LOCALAPPDATA\Microsoft\Windows\Fonts"
+    if (-not (Test-Path )) {
+        New-Item -Path  -ItemType Directory | Out-Null
     }
     
-    $TtfFiles = Get-ChildItem -Path $TempFolder -Filter "*.ttf" -Recurse
+     = Get-ChildItem -Path  -Filter "*.ttf" -Recurse
     
     # Copy and register each font
-    foreach ($File in $TtfFiles) {
-        $TargetFile = Join-Path $FontsFolder $File.Name
-        Copy-Item -Path $File.FullName -Destination $TargetFile -Force
+    foreach ( in ) {
+         = Join-Path  .Name
+        Copy-Item -Path .FullName -Destination  -Force
         
         # Registry key for active user font registration
-        $RegPath = "HKCU:\Software\Microsoft\Windows NT\CurrentVersion\Fonts"
-        $FontName = $File.BaseName + " (TrueType)"
-        Set-ItemProperty -Path $RegPath -Name $FontName -Value $File.Name | Out-Null
+         = "HKCU:\Software\Microsoft\Windows NT\CurrentVersion\Fonts"
+         = .BaseName + " (TrueType)"
+        Set-ItemProperty -Path  -Name  -Value .Name | Out-Null
     }
     
     # Cleanup
-    Remove-Item -Path $TempZip -Force
-    Remove-Item -Path $TempFolder -Recurse -Force
+    Remove-Item -Path  -Force
+    Remove-Item -Path  -Recurse -Force
     Write-Host "✔ فونت وزیرمتن با موفقیت روی ویندوز نصب شد." -ForegroundColor Green
 } else {
     Write-Host "❌ خطا در دانلود فونت. اتصال اینترنت خود را بررسی کنید." -ForegroundColor Red
@@ -58,34 +58,34 @@ if (Test-Path $TempZip) {
 # 2. Patch Antigravity App UI on Windows
 Write-Host ""
 Write-Host "۲. در حال راست‌چین‌سازی ظاهر عمومی برنامه Antigravity..." -ForegroundColor Yellow
-$AppAsarPath = "$env:LOCALAPPDATA\Programs\Antigravity\resources\app.asar"
+ = ":LOCALAPPDATA\Programs\Antigravity\resources\app.asar"
 
-if (Test-Path $AppAsarPath) {
+if (Test-Path ) {
     Write-Host "برنامه یافت شد. در حال اعمال پچ..."
     
     # Backup
-    $BackupPath = "$AppAsarPath.bak"
-    if (-not (Test-Path $BackupPath)) {
-        Copy-Item -Path $AppAsarPath -Destination $BackupPath -Force
+     = ".bak"
+    if (-not (Test-Path )) {
+        Copy-Item -Path  -Destination  -Force
     }
     
     # Extract, patch, and repack requires Node.js/npx asar
     if (Get-Command npx -ErrorAction SilentlyContinue) {
-        $TempExtracted = "$env:TEMP\extracted_app"
-        npx asar extract $AppAsarPath $TempExtracted
+         = ":TEMP\extracted_app"
+        npx asar extract  
         
-        $PreloadPath = Get-ChildItem -Path $TempExtracted -Filter "preload.js" -Recurse | Select-Object -First 1
+         = Get-ChildItem -Path  -Filter "preload.js" -Recurse | Select-Object -First 1
         
-        if ($PreloadPath) {
-            $Content = Get-Content -Path $PreloadPath.FullName -Raw
-            if (-not ($Content -like "*persian-rtl-vazirmatn-style*")) {
-                $InjectCode = @"
+        if () {
+             = Get-Content -Path .FullName -Raw
+            if (-not ( -like "*persian-rtl-vazirmatn-style*")) {
+                 = @"
 
 // RTL & Font Injector - Persian Gravity Project
 window.addEventListener('DOMContentLoaded', () => {
     const style = document.createElement('style');
     style.id = 'persian-rtl-vazirmatn-style';
-    style.innerHTML = \`
+    style.innerHTML = `
       @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
       
       * {
@@ -103,13 +103,13 @@ window.addEventListener('DOMContentLoaded', () => {
         unicode-bidi: normal !important;
         text-align: left !important;
       }
-    \`;
+    `;
     document.head.appendChild(style);
 });
 "@
-                Add-Content -Path $PreloadPath.FullName -Value $InjectCode
-                npx asar pack $TempExtracted $AppAsarPath
-                Remove-Item -Path $TempExtracted -Recurse -Force
+                Add-Content -Path .FullName -Value 
+                npx asar pack  
+                Remove-Item -Path  -Recurse -Force
                 Write-Host "✔ ظاهر نرم‌افزار با موفقیت پچ شد." -ForegroundColor Green
             } else {
                 Write-Host "ℹ️ پچ راست‌چین پیش از این روی نرم‌افزار اعمال شده است." -ForegroundColor Yellow
@@ -126,35 +126,57 @@ window.addEventListener('DOMContentLoaded', () => {
 Write-Host ""
 Write-Host "۳. در حال اعمال تنظیمات روی ادیتورها..." -ForegroundColor Yellow
 
-$EditorPaths = @(
-    "$env:APPDATA\Antigravity\User\settings.json",
-    "$env:APPDATA\Code\User\settings.json",
-    "$env:APPDATA\Cursor\User\settings.json",
-    "$env:APPDATA\Trae\User\settings.json",
-    "$env:APPDATA\VSCodium\User\settings.json",
-    "$env:APPDATA\Windsurf\User\settings.json"
+ = @(
+    "PPDATA\Antigravity\User\settings.json",
+    "PPDATA\Code\User\settings.json",
+    "PPDATA\Cursor\User\settings.json",
+    "PPDATA\Trae\User\settings.json",
+    "PPDATA\VSCodium\User\settings.json",
+    "PPDATA\Windsurf\User\settings.json"
 )
 
-foreach ($Path in $EditorPaths) {
-    if (Test-Path $Path) {
+foreach ( in ) {
+    if (Test-Path ) {
         try {
-            $Content = Get-Content -Path $Path -Raw
+             = Get-Content -Path  -Raw
             # Basic cleaning of JSONC comments
-            $CleanContent = $Content -replace '//.*', ''
-            $Json = ConvertFrom-Json $CleanContent
+             =  -replace '//.*', ''
+             = ConvertFrom-Json 
             
-            if (-not $Json) { $Json = @{} }
+            if (-not ) {  = @{} }
             
-            $Json | Add-Member -NotePropertyName "editor.fontFamily" -NotePropertyValue "Vazirmatn, Consolas, 'Courier New', monospace" -Force
-            $Json | Add-Member -NotePropertyName "editor.renderWhitespace" -NotePropertyValue "boundary" -Force
+             | Add-Member -NotePropertyName "editor.fontFamily" -NotePropertyValue "Vazirmatn, Consolas, 'Courier New', monospace" -Force
+             | Add-Member -NotePropertyName "editor.renderWhitespace" -NotePropertyValue "boundary" -Force
             
-            $NewContent = ConvertTo-Json $Json -Depth 10
-            Set-Content -Path $Path -Value $NewContent -Encoding utf8
-            Write-Host "✔ تنظیمات روی $Path اعمال شد." -ForegroundColor Green
+             = ConvertTo-Json  -Depth 10
+            Set-Content -Path  -Value  -Encoding utf8
+            Write-Host "✔ تنظیمات روی  اعمال شد." -ForegroundColor Green
         } catch {
-            Write-Host "❌ خطا در بروزرسانی فایل تنظیمات $Path" -ForegroundColor Red
+            Write-Host "❌ خطا در بروزرسانی فایل تنظیمات " -ForegroundColor Red
         }
     }
+}
+
+# 4. Setup Auto-Persistence Task
+Write-Host ""
+Write-Host "۴. در حال راه‌اندازی سرویس ماندگاری دائمی پچ پس از آپدیت‌ها..." -ForegroundColor Yellow
+ = ":LOCALAPPDATA\Antigravity-RTL"
+if (-not (Test-Path )) {
+    New-Item -Path  -ItemType Directory -Force | Out-Null
+}
+
+ = Join-Path  "scripts\patch_antigravity.ps1"
+if (Test-Path ) {
+    Copy-Item -Path  -Destination (Join-Path  "patch_antigravity.ps1") -Force
+}
+
+try {
+     = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"\patch_antigravity.ps1`""
+     = New-ScheduledTaskTrigger -AtLogOn
+    Register-ScheduledTask -TaskName "AntigravityRTLAutoPatch" -Action  -Trigger  -Description "Auto-reapplies RTL patch after Antigravity updates" -Force | Out-Null
+    Write-Host "✔ تسک ماندگاری دائمی (Scheduled Task) در ویندوز با موفقیت ثبت شد." -ForegroundColor Green
+} catch {
+    Write-Host "ℹ️ راه‌اندازی Task خودکار با دسترسی عادی ممکن نشد (در صورت نیاز با دسترسی Administrator اجرا کنید)." -ForegroundColor Yellow
 }
 
 Write-Host ""

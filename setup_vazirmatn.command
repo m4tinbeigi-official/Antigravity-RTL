@@ -25,11 +25,13 @@ echo ""
 # Functions
 show_menu() {
     echo -e "${BLUE}لطفاً عملیات مورد نظر را انتخاب کنید:${NC}"
-    echo -e "1) ${GREEN}نصب فونت و اعمال پچ راست‌چین‌سازی کامل${NC}"
-    echo -e "2) ${RED}بازگرداندن برنامه‌ها به حالت اولیه (Restore Backup)${NC}"
-    echo -e "3) خروج"
+    echo -e "1) ${GREEN}نصب فونت و اعمال پچ راست‌چین‌سازی کامل (به همراه ماندگاری دائمی)${NC}"
+    echo -e "2) ${CYAN}فعال‌سازی / بررسی وضعیت سرویس ماندگاری خودکار (Auto-Persistence Daemon)${NC}"
+    echo -e "3) ${YELLOW}غیرفعال‌سازی سرویس ماندگاری خودکار${NC}"
+    echo -e "4) ${RED}بازگرداندن برنامه‌ها به حالت اولیه (Restore Backup)${NC}"
+    echo -e "5) خروج"
     echo ""
-    read -p "انتخاب شما (1-3): " main_choice
+    read -p "انتخاب شما (1-5): " main_choice
 }
 
 choose_font() {
@@ -69,7 +71,7 @@ choose_font() {
 }
 
 install_font() {
-    echo -e "\n${YELLOW}[۱/۳] در حال دانلود و نصب فونت $FONT_NAME...${NC}"
+    echo -e "\n${YELLOW}[۱/۴] در حال دانلود و نصب فونت $FONT_NAME...${NC}"
     curl -L -o /tmp/persian_font.zip "$ZIP_URL"
     
     if [ $? -eq 0 ]; then
@@ -88,7 +90,7 @@ install_font() {
 }
 
 patch_app() {
-    echo -e "\n${YELLOW}[۲/۳] در حال راست‌چین‌سازی ظاهر عمومی برنامه Antigravity...${NC}"
+    echo -e "\n${YELLOW}[۲/۴] در حال راست‌چین‌سازی ظاهر عمومی برنامه Antigravity...${NC}"
     
     if [ -d "/Applications/Antigravity.app" ]; then
         # Check if asar package is available
@@ -167,7 +169,7 @@ EOF
 }
 
 update_editor_configs() {
-    echo -e "\n${YELLOW}[۳/۳] در حال تنظیم فونت روی ادیتورها...${NC}"
+    echo -e "\n${YELLOW}[۳/۴] در حال تنظیم فونت روی ادیتورها...${NC}"
     
     python3 -c "
 import os, json
@@ -194,7 +196,7 @@ for p in paths:
             except Exception:
                 data = {}
 
-            data['editor.fontFamily'] = \"$FONT_NAME, Menlo, Monaco, 'Courier New', monospace\"
+            data['editor.fontFamily'] = "$FONT_NAME, Menlo, Monaco, 'Courier New', monospace"
             data['editor.renderWhitespace'] = 'boundary'
             
             with open(full_path, 'w', encoding='utf-8') as f:
@@ -203,6 +205,66 @@ for p in paths:
         except Exception as e:
             print(f'❌ خطا در بروزرسانی {p}: {e}')
 "
+}
+
+setup_auto_persistence() {
+    echo -e "\n${YELLOW}[۴/۴] در حال راه‌اندازی سرویس ماندگاری دائمی پچ پس از آپدیت‌ها (Auto-Persistence Daemon)...${NC}"
+    
+    HELPER_DIR="$HOME/.antigravity-rtl"
+    HELPER_SCRIPT="$HELPER_DIR/patch_antigravity.sh"
+    PLIST_PATH="$HOME/Library/LaunchAgents/com.antigravity.rtl.watcher.plist"
+    
+    mkdir -p "$HELPER_DIR"
+    mkdir -p "$HOME/Library/LaunchAgents"
+    mkdir -p "$HOME/Library/Logs"
+    
+    if [ -f "scripts/patch_antigravity.sh" ]; then
+        cp -f "scripts/patch_antigravity.sh" "$HELPER_SCRIPT"
+    fi
+    chmod +x "$HELPER_SCRIPT"
+    
+    cat << EOF_PLIST > "$PLIST_PATH"
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.antigravity.rtl.watcher</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>$HELPER_SCRIPT</string>
+    </array>
+    <key>WatchPaths</key>
+    <array>
+        <string>/Applications/Antigravity.app/Contents/Resources/app.asar</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>$HOME/Library/Logs/antigravity-rtl.log</string>
+    <key>StandardErrorPath</key>
+    <string>$HOME/Library/Logs/antigravity-rtl-error.log</string>
+</dict>
+</plist>
+EOF_PLIST
+
+    launchctl unload "$PLIST_PATH" &>/dev/null
+    launchctl load "$PLIST_PATH" &>/dev/null
+    
+    echo -e "${GREEN}✔ سرویس پایش خودکار (LaunchAgent) با موفقیت در مک ثبت شد.${NC}"
+    echo -e "${GREEN}  از این پس با هر آپدیت Antigravity، پچ راست‌چین به صورت خودکار اعمال خواهد شد.${NC}"
+}
+
+disable_auto_persistence() {
+    PLIST_PATH="$HOME/Library/LaunchAgents/com.antigravity.rtl.watcher.plist"
+    if [ -f "$PLIST_PATH" ]; then
+        launchctl unload "$PLIST_PATH" &>/dev/null
+        rm -f "$PLIST_PATH"
+        echo -e "${GREEN}✔ سرویس پایش خودکار با موفقیت غیرفعال شد.${NC}"
+    else
+        echo -e "${YELLOW}ℹ️ سرویس پایش خودکار فعال نبود.${NC}"
+    fi
 }
 
 restore_backup() {
@@ -227,10 +289,15 @@ if [ "$main_choice" == "1" ]; then
     install_font
     patch_app
     update_editor_configs
+    setup_auto_persistence
     echo -e "\n${GREEN}=====================================================${NC}"
     echo -e "${GREEN}     عملیات با موفقیت انجام شد! برنامه را بازنشانی کنید.     ${NC}"
     echo -e "${GREEN}=====================================================${NC}"
 elif [ "$main_choice" == "2" ]; then
+    setup_auto_persistence
+elif [ "$main_choice" == "3" ]; then
+    disable_auto_persistence
+elif [ "$main_choice" == "4" ]; then
     restore_backup
 else
     echo "خروج از برنامه."

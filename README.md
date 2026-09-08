@@ -22,9 +22,12 @@ Smart Right-to-Left (RTL) alignment and custom font patcher for the Antigravity 
 
 ## 🛠️ Features
 - **Antigravity App UI Auto-Patching**: Smart RTL alignment for the chat canvas, menus, and general panels.
-- **Automated Font Installation**: Downloads and installs the latest version of Vazirmatn (or other custom fonts) directly to the macOS Font Library.
+- **Auto-Persistence Daemon Across Updates** 🔄: Seamlessly registers a background watcher service (`LaunchAgent` on macOS, `Scheduled Task` on Windows, and `systemd` user service on Linux). Whenever Antigravity updates and replaces its internal assets, the patch is automatically re-applied without manual intervention.
+- **Automated Font Installation**: Downloads and installs the latest version of Vazirmatn (or other custom fonts) directly to the system Font Library.
 - **IDE Configuration**: Automatically updates `settings.json` configurations to use Vazirmatn in Antigravity, VS Code, Cursor, Trae, VSCodium, and Windsurf.
 - **Cross-Platform Support**: Custom scripts provided for macOS, Windows, and Linux.
+
+---
 
 ## 🚀 One-Click Installation
 To install the font and apply the patch automatically:
@@ -38,8 +41,8 @@ To install the font and apply the patch automatically:
 
 To make this patch obsolete and encourage Google to support RTL languages (Persian, Arabic, Hebrew) and quality fonts natively in Antigravity:
 
-1. **Email the Team**: Copy the pre-written template in [feedback_report.md](file:///Users/ricksabchez/.gemini/antigravity/brain/045f627c-9f65-46e2-af2f-99ba6175b49d/feedback_report.md) and send it to `antigravity-support@google.com`.
-2. **In-App Feedback**: Open Antigravity, press `Cmd + ,` (Mac) or `Ctrl + ,` (Windows/Linux), click **Feedback**, and paste the message template.
+1. **Email the Team**: Send your feedback to `antigravity-support@google.com`.
+2. **In-App Feedback**: Open Antigravity, press `Cmd + ,` (Mac) or `Ctrl + ,` (Windows/Linux), click **Feedback**, and submit your message.
 
 Let's make RTL development a first-class citizen! 🚀
 
